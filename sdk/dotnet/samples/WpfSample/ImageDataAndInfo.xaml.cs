@@ -50,7 +50,7 @@ namespace WpfSample
                 // Extract the full path of image file
                 var fileName = openFileDialog.FileName;
 
-                // If the image is 8-bit, then we need to scale it up to 12
+                // If the image is 8-bit, then we will scale it up to 12 bits
                 if (Is8BitPng(fileName))
                 {
                     // Determine a new filename to hold the upscaled image
@@ -127,6 +127,10 @@ namespace WpfSample
         /// <returns>true if the image was upscaled successfully</returns>
         private bool Upscale8bitImage(string imageFileNameIn, string imageFileNameOut)
         {
+            // Track min/max values so we can create an appropriate LutInfo
+            ushort minGray = ushort.MaxValue;
+            ushort maxGray = ushort.MinValue;
+
             // Create a decoder to read the input image file
             BitmapDecoder decoder = BitmapDecoder.Create(new Uri(imageFileNameIn), 
                 BitmapCreateOptions.PreservePixelFormat, BitmapCacheOption.Default);
@@ -152,6 +156,10 @@ namespace WpfSample
             for (int i = 0; i < pixel12.Length; i++)
             {
                 pixel12[i] = (ushort)(pixel8[i] << 4);
+
+                // Comupte min/max grays
+                minGray = Math.Min(minGray, pixel12[i]);
+                maxGray = Math.Max(maxGray, pixel12[i]);
             }
 
             // Create a BitmapSource using the new 12-bit data
@@ -168,6 +176,23 @@ namespace WpfSample
             {
                 encoder.Save(fileStream);
             }
+
+            // Change the default ImageInfo to match desired Lut with a linear map
+            TbxImageInfo.Text = @"{
+    'acquisitionInfo':
+    {
+        'binning': 'Unbinned'
+    },
+    'lutInfo':
+    {
+        'gamma': 1.0,
+        'slope': 4095,
+        'offset': 0,
+        'totalGrays': 4096,
+        'minimumGray': " + maxGray + @",
+        'maximumGray': " + minGray + @"
+    }
+}";
 
             return true;
         }
