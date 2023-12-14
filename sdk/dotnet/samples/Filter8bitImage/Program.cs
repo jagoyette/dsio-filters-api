@@ -77,7 +77,7 @@ try
                 LutInfo = new DSIO.Filters.Api.Sdk.Types.V1.LutInfo
                 {
                     Gamma = 1.0,
-                    Slope = 4096,
+                    Slope = 4095,
                     Offset = 0,
                     TotalGrays = 4096,
                     MinimumGray = maxGray,
